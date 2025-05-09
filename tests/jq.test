@@ -2327,3 +2327,76 @@ foreach .[] as $x (0, 1; . + $x)
 3
 2
 4
+
+
+# Streaming and slurping tests (issue #XXXX fix verification)
+# Basic case from issue
+-s --stream .
+"[1]"
+[[[0],1],[[0]]]
+
+# Terminated comparison
+-s --stream .
+"[1]\n"
+[[[0],1],[[0]]]
+
+# Empty array cases
+-s --stream .
+"[]"
+[[[0]]]
+
+-s --stream .
+"[]\n"
+[[[0]]]
+
+# Nested structures
+-s --stream .
+"[[1]]"
+[[[0,0],1],[[0]]]
+
+-s --stream .
+"{\"a\":{\"b\":1}}"
+[[["a","b"],1],[[0]]]
+
+# Multiple values
+-s --stream .
+"[1,2,3]"
+[[[0],1],[[1],2],[[2],3],[[0]]]
+
+# Multiple top-level values (without array)
+-s --stream .
+"1\n2"
+[[[],1],[[],2]]
+
+# Complex case combining features
+-s --stream .
+"{\"a\":[1,2],\"b\":3}"
+[[["a",0],1], [["a",1],2], [["b"],3], [[0]]]
+
+
+
+# Streaming and slurping tests
+-s --stream .
+"[1]\n"
+[[[0],1],[[0]]]
+
+-s --stream .
+"[1]"
+[[[0],1],[[0]]]
+
+-s --stream .
+"{\"a\":1}\n"
+[[["a"],1],[[0]]]
+
+-s --stream .
+"{\"a\":1}"
+[[["a"],1],[[0]]]
+
+-s --stream .
+"[1,2]\n"
+[[[0],1],[[1],2],[[0]]]
+
+-s --stream .
+"[1,2]"
+[[[0],1],[[1],2],[[0]]]
+

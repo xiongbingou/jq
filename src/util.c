@@ -429,15 +429,15 @@ jv jq_util_input_next_input(jq_util_input_state *state) {
       }
       value = jv_parser_next(state->parser);
       if (jv_is_valid(state->slurped)) {
-        // When slurping an input that doesn't have a trailing newline,
-        // we might have more than one value on the same line, so let's check
-        // to see if we have more data to parse.
-        has_more = jv_parser_remaining(state->parser);
+        // When slurping, collect all values before returning
         if (jv_is_valid(value)) {
           state->slurped = jv_array_append(state->slurped, value);
           value = jv_invalid();
-        } else if (jv_invalid_has_msg(jv_copy(value)))
+        } else if (jv_invalid_has_msg(jv_copy(value))) {
           return value; // Not slurped parsed input
+        }
+        // Check if we have more data to parse or if we've hit EOF
+        has_more = !is_last || jv_parser_remaining(state->parser);
       } else if (jv_is_valid(value) || jv_invalid_has_msg(jv_copy(value))) {
         return value;
       }
@@ -445,8 +445,13 @@ jv jq_util_input_next_input(jq_util_input_state *state) {
   } while (!is_last || has_more);
 
   if (jv_is_valid(state->slurped)) {
-    value = state->slurped;
-    state->slurped = jv_invalid();
+    // Only return slurped values when we're certain we've collected everything
+    if (is_last && !has_more) {
+      value = state->slurped;
+      state->slurped = jv_invalid();
+    } else {
+      value = jv_invalid(); // Need more input
+    }
   }
   return value;
 }
