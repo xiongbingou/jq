@@ -1,0 +1,34 @@
+
+# Test for streaming/slurping behavior with and without terminating newlines
+
+==== Array with newline ====
+-s --stream .
+[1]
+[[[0],1],[[0]]]
+
+==== Array without newline ====
+-s --stream .
+[1]
+[[[0],1],[[0]]]
+
+==== Object with newline ====
+-s --stream .
+{"a":1}
+[[["a"],1],[[0]]]
+
+==== Object without newline ====
+-s --stream .
+{"a":1}
+[[["a"],1],[[0]]]
+
+==== Multiple values with newline ====
+-s --stream .
+1
+2
+[[[0],1],[[0],2],[[0]]]
+
+==== Multiple values without newline ====
+-s --stream .
+1
+2
+[[[0],1],[[0],2],[[0]]]
