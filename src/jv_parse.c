@@ -607,6 +607,11 @@ static int stream_check_done(struct jv_parser* p, jv* out) {
       p->output = jv_invalid();
     }
     return 1;
+  } else if (p->eof && (p->flags & JV_PARSE_STREAMING) && jv_is_valid(p->next)) {
+    // Handle EOF in streaming mode without additional empty token
+    *out = JV_ARRAY(jv_copy(p->path), p->next);
+    p->next = jv_invalid();
+    return 1;
   } else {
     return 0;
   }
