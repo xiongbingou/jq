@@ -436,17 +436,26 @@ jv jq_util_input_next_input(jq_util_input_state *state) {
         if (jv_is_valid(value)) {
           state->slurped = jv_array_append(state->slurped, value);
           value = jv_invalid();
+          // In slurp mode, we want to keep parsing until we're sure we have all tokens
+          has_more = jv_parser_remaining(state->parser) || !is_last;
         } else if (jv_invalid_has_msg(jv_copy(value)))
           return value; // Not slurped parsed input
       } else if (jv_is_valid(value) || jv_invalid_has_msg(jv_copy(value))) {
         return value;
       }
     }
-  } while (!is_last || has_more);
+  } while (!is_last || has_more || (jv_is_valid(state->slurped) && !is_last));
 
   if (jv_is_valid(state->slurped)) {
     value = state->slurped;
     state->slurped = jv_invalid();
+    // If we're at EOF and in streaming mode, ensure we have all final tokens
+    if (is_last && state->parser && (state->parser->flags & JV_PARSE_STREAMING)) {
+      jv final_token = jv_parser_next(state->parser);
+      if (jv_is_valid(final_token)) {
+        value = jv_array_append(value, final_token);
+      }
+    }
   }
   return value;
 }

@@ -847,8 +847,23 @@ jv jv_parser_next(struct jv_parser* p) {
     }
     // p->next is either invalid (nothing here, but no syntax error)
     // or valid (this is the value). either way it's the thing to return
-    if ((p->flags & JV_PARSE_STREAMING) && jv_is_valid(p->next)) {
-      value = JV_ARRAY(jv_copy(p->path), p->next); // except in streaming mode we've got to make it [path,value]
+    if ((p->flags & JV_PARSE_STREAMING)) {
+      if (jv_is_valid(p->next)) {
+        value = JV_ARRAY(jv_copy(p->path), p->next);
+        if (p->eof && jv_array_length(jv_copy(p->path)) > 0) {
+          value = JV_ARRAY(value, JV_ARRAY(jv_copy(p->path), jv_null()));
+        }
+      } else if (jv_is_valid(p->path)) {
+        value = JV_ARRAY(jv_copy(p->path), jv_null());
+      }
+    } else {
+      value = p->next;
+    }
+        value = JV_ARRAY(jv_copy(p->path), p->next);
+      } else {
+        // In streaming mode at EOF, emit the final empty path if we have one
+        value = JV_ARRAY(jv_copy(p->path), jv_null());
+      }
     } else {
       value = p->next;
     }
