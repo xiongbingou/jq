@@ -596,6 +596,13 @@ static int stream_check_done(struct jv_parser* p, jv* out) {
     p->next = jv_invalid();
     return 1;
   } else if (jv_is_valid(p->output)) {
+    // For streaming mode, always return complete output
+    if (p->flags & JV_PARSE_STREAMING) {
+      *out = p->output;
+      p->output = jv_invalid();
+      return 1;
+    }
+    // Only produce extra segment if we have more data coming
     if (jv_array_length(jv_copy(p->output)) > 2) {
       // At end of an array or object, necessitating one more output by
       // which to indicate this
@@ -776,6 +783,8 @@ jv jv_parser_next(struct jv_parser* p) {
     parser_reset(p);
   }
   jv value = jv_invalid();
+  if (!p->curr_buf_is_partial && p->curr_buf_pos == p->curr_buf_length)
+    p->eof = 1; // We're at EOF for this buffer
   if ((p->flags & JV_PARSE_STREAMING) && stream_check_done(p, &value))
     return value;
   char ch;
