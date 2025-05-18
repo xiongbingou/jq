@@ -200,6 +200,13 @@ fi
 
 ## Test streaming parser
 
+## Test slurp+stream combination with/without newline termination
+printf '[[[0],1],[[0]]]\n' > $d/expected
+printf "[1]\n" | $VALGRIND $Q $JQ -c -s --stream . > $d/out
+cmp $d/out $d/expected
+printf "[1]" | $VALGRIND $Q $JQ -c -s --stream . > $d/out
+cmp $d/out $d/expected
+
 ## If we add an option to stream to the `import ... as $symbol;` directive
 ## then we can move these tests into tests/all.test.
 $VALGRIND $Q $JQ -c '. as $d|path(..) as $p|$d|getpath($p)|select((type|. != "array" and . != "object") or length==0)|[$p,.]' < "$JQTESTDIR/torture/input0.json" > $d/out0
