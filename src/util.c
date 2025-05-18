@@ -192,6 +192,7 @@ struct jq_util_input_state {
   size_t buf_valid_len;
   jv current_filename;
   size_t current_line;
+  int streaming;
 };
 
 static void fprinter(void *data, const char *fname) {
@@ -209,13 +210,15 @@ jq_util_input_state *jq_util_input_init(jq_util_msg_cb err_cb, void *err_cb_data
   new_state->err_cb_data = err_cb_data;
   new_state->slurped = jv_invalid();
   new_state->current_filename = jv_invalid();
+  new_state->streaming = 0;
 
   return new_state;
 }
 
-void jq_util_input_set_parser(jq_util_input_state *state, jv_parser *parser, int slurp) {
+void jq_util_input_set_parser(jq_util_input_state *state, jv_parser *parser, int slurp, int streaming) {
   assert(!jv_is_valid(state->slurped));
   state->parser = parser;
+  state->streaming = streaming;
 
   if (parser == NULL && slurp)
     state->slurped = jv_string("");
@@ -447,6 +450,10 @@ jv jq_util_input_next_input(jq_util_input_state *state) {
   if (jv_is_valid(state->slurped)) {
     value = state->slurped;
     state->slurped = jv_invalid();
+    // For streaming input, ensure we include the final empty path marker
+    if (state->streaming) {
+      value = jv_array_append(value, JV_ARRAY(jv_array()));
+    }
   }
   return value;
 }
