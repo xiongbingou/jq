@@ -2327,3 +2327,30 @@ foreach .[] as $x (0, 1; . + $x)
 3
 2
 4
+
+# Test streaming + slurping behavior with/without trailing newlines
+-s --stream
+"[1]\n"
+[[[0],1],[[0]]]
+
+-s --stream
+"[1]"
+[[[0],1],[[0]]]
+
+-s --stream
+"{\"a\":1}\n"
+[[["a"],1], [["a"]]]
+
+-s --stream
+"{\"a\":1}"
+[[["a"],1], [["a"]]]
+
+# Test empty input cases
+-s --stream
+""
+[]
+
+-s --stream
+"\n"
+[]
+

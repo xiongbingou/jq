@@ -848,7 +848,20 @@ jv jv_parser_next(struct jv_parser* p) {
     // p->next is either invalid (nothing here, but no syntax error)
     // or valid (this is the value). either way it's the thing to return
     if ((p->flags & JV_PARSE_STREAMING) && jv_is_valid(p->next)) {
-      value = JV_ARRAY(jv_copy(p->path), p->next); // except in streaming mode we've got to make it [path,value]
+      if (jv_is_valid(p->output)) {
+        // Combine any pending output with the final token
+        if (jv_array_length(jv_copy(p->output)) > 2) {
+          value = jv_array_slice(jv_copy(p->output), 0, 2);
+          p->output = jv_array_slice(p->output, 0, 1);
+        } else {
+          value = p->output;
+          p->output = jv_invalid();
+        }
+        // Add the final token to the output array
+        value = jv_array_append(value, JV_ARRAY(jv_copy(p->path), p->next));
+      } else {
+        value = JV_ARRAY(jv_copy(p->path), p->next);
+      }
     } else {
       value = p->next;
     }
